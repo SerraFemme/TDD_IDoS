@@ -1,0 +1,17 @@
+pip install -r Requirements.txt
+# Look into scripting this
+# Check syntax for version number
+
+
+
+
+
+
+
+
+
+from events import event_name
+event_name.register(myfunc)
+event_name.send(my_data)
+
+persistent: keyword for events

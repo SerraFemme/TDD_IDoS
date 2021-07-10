@@ -1,0 +1,60 @@
+GAME EVENTS:
+BattleStart
+BattleEnd
+
+TURN EVENTS:
+BeginPlayerPhase
+EndPlayerPhase
+BeginPlayerTurn
+EndPlayerTurn
+BeginEnemyPhase
+EndEnemyPhase
+BeginEnemyTurn
+EndEnemyTurn
+UpkeepPhase
+MulliganPhase
+EndPhase
+
+DECK EVENTS:
+Draw
+Discard
+Mill
+Heal
+Scar
+Shuffle
+
+CARD EVENTS:
+CardPlayed
+CardResolved
+CardInterrupted
+CardCreated
+CardDeleted
+CardCopied
+PermanentEntering
+PermanentLeaving
+
+MOVEMENT FUNCTIONS:
+MovedOntoTile
+
+UNIT EVENTS:
+PlayerFaints
+UnitDies
+DamageDealt
+DamageTaken
+UnitHealing
+
+MODIFIED EVENTS:
+CostModified
+CardTransformed
+
+STAMINA EVENTS:
+StaminaGained
+StaminaSpent
+
+ABILITY EVENTS:
+AbilityActivated
+AbilityTriggered
+AbilityResolved
+
+TARGETING EVENTS:
+DefenderTargeted

@@ -1,0 +1,13 @@
+{
+  "ID": "MartialMelee5",
+  "Faction_Type": "Martial",
+  "Equipment_Type": "Melee",
+  "Name": "Great Hammer",
+  "Stats": {
+    "Damage": 4,
+    "Stamina": -1
+  },
+  "Abilities": {
+    "Bludgeon": 2
+  }
+}

@@ -1,0 +1,41 @@
+Meta:
+X: Undetermined value, integers only
+
+Unit Keywords:
+-Weapon Damage:
+-Armor: Reduces the incoming instance of damage by a given value, instances of armor are additive. Cards or effects that would reduce the armor value of a token below 0 instead reduce it to 0.
+-Range: Restricts valid targets
+-Stamina Pool: Capacity of stamina points, resets at the beginning of the unit's turn.
+-Stamina Points: Spent by abilities, cards, and movement
+
+Equipment Specific Keywords:
+-Bludgeon X: Reduce the armor of a target by X after resolving an attack card against them until the end of your turn.
+
+Damage Types:
+-Martial: Basic damage type
+-Divine: Undead receive double damage (Applies after armor reduction is calculated)
+-Arcane: Armor does not reduce value.
+-True Damage: Cannot be reduced or interrupted
+
+Card Specific Keywords:
+-Draw X: take the top X cards of your Health Deck and put them into your Hand.
+-Discard X: Take X cards from your hand and put them on top of your wound pile in any order.
+-Heal X: take the top X cards of your Wounds Pile and put them in any order on the bottom of your Health Deck.  Can only apply if there are cards in the Wounds Pile.
+-Scar X: While this card is in your Wounds pile, you may spend X stamina then play this card at a time this card can be played. After this card resolves, put it face down on your Scar Pile. After the Battle Phase, shuffle your Scar Pile into your Health Deck.
+-Regen X: Heal X when you draw this card
+-Trigger: Cards with a trigger can only be played when the specified event is met.
+-Fabricated: Temporary card. If a card with fabricated would be put into either your wound or scar pile, it is DELETED instead.
+
+Position Specific Keywords:
+-Push X: The target is moved away from the unit by X tiles, if that tile is unoccupied. Not affected by range and range effects.
+-Pull X: The target is moved toward the unit by X tiles, if that tile is unoccupied.
+-Recoil X: Unit moves away from target by X tiles (Requires the In-Line keyword to be in effect)
+
+Range Specific Keywords:
+-Inline: Restricts range to orthogonal tiles only.
+-Close: Inherits the In-Line rule set. Must select the nearest target in a desired direction, regardless of range. If the nearest target is not in range of the card, then that direction is invalid.
+
+Misc Keywords:
+-Splash X: In a radius of X tiles, deal weapon damage to each token on those tiles, this does not count as targeting.
+-Interrupt: the specified card is ignored. The effect still counts as being made, but does not resolve.
+-Requirement: Deck Building constraint: must have listed equipment equipped.

@@ -1,0 +1,181 @@
+-------------------------------------------------------------------------------
+Basic Stack Class
+---
+class Stack(object):
+    def __init__(self):
+        self.stack = []  # May need changing
+
+    # Use add to add an item to the stack
+    def add(self, dataval):
+        if dataval not in self.stack:
+            self.stack.append(dataval)  # Use list append method to add element
+            return True
+        else:
+            return False
+
+    # Use peek to look at the top of the stack
+    def peek(self):
+        return self.stack[0]
+
+    # Use list pop method to remove element
+    def remove(self):
+        if len(self.stack) <= 0:
+            return ("No element in the Stack")
+        else:
+            return self.stack.pop()
+
+
+-------------------------------------------------------------------------------
+Basic Queue Class
+---
+class Queue(object):
+    def __init__(self):
+        self.queue = list()  # May need changing
+
+    def addtoq(self,dataval):
+        # Insert method to add element
+        if dataval not in self.queue:
+            self.queue.insert(0, dataval)
+            return True
+        else:
+            return False
+
+    # Pop method to remove element
+    def removefromq(self):
+        if len(self.queue)>0:
+            return self.queue.pop()
+        else:
+            return ("No elements in Queue!")
+
+    def size(self):
+        return len(self.queue)
+
+
+-------------------------------------------------------------------------------
+Potential String to python class call
+---
+1.
+import sys
+
+def str_to_class(classname):
+    return reduce(getattr, str.split("."), sys.modules[__name__])
+
+2.
+import importlib
+
+def class_for_name(module_name, class_name):
+    # load the module, will raise ImportError if module cannot be loaded
+    m = importlib.import_module(module_name)
+    # get the class, will raise AttributeError if class cannot be found
+    c = getattr(m, class_name)
+    return c
+
+loaded_class = class_for_name('foo.bar', 'Baz')
+
+3.
+module = __import__(module_name)
+class_ = getattr(module, class_name)
+instance = class_()
+
+4.
+import foo
+method_to_call = getattr(foo, 'bar')
+result = method_to_call()
+
+or
+
+result = getattr(foo, 'bar')()
+
+-------------------------------------------------------------------------------
+Observer Pattern for Python
+---
+1.
+class Observable:
+    def __init__(self):
+        self.__observers = []
+    
+    def register_observer(self, observer):
+        self.__observers.append(observer)
+    
+    def notify_observers(self, *args, **kwargs):
+        for observer in self.__observers:
+            observer.notify(self, *args, **kwargs)
+
+class Observer:
+    def __init__(self, observable):
+        observable.register_observer(self)
+    
+    def notify(self, observable, *args, **kwargs):
+        print('Got', args, kwargs, 'From', observable)
+
+
+subject = Observable()
+observer = Observer(subject)
+subject.notify_observers('test')
+
+2.
+class Subject(object):
+    def __init__(self, *args, **kwargs):
+        # additional set up
+        self.observers = []
+
+    def register(self, observer):
+        self.observers.append(observer)
+
+    def unregister(self, observer):
+        self.observers.remove(observer)
+
+    def notify(self, **extra_kwargs):
+        for observer in self.observers:
+            observer.notify(self, **extra_kwargs)
+
+
+class Observer(object):
+    def __init__(self, *args, **kwargs):
+        # additional set up
+
+    def notify(self, subject, **extra_kwargs):
+        raise NotImplementedError("All observers must implement a notify method.")
+
+
+class ThingIAmMessingWith(Subject):
+    def __init__(self,  initial):
+        self.initial
+
+    def do_the_thing_that_changes(self):
+        # do the thing
+        # when done, call notify
+        self.notify(extra_kwargs)
+
+class ThingIWantToDoOnChange(Observer):
+    def __init__(self, *args, **kwargs):
+        # setup
+        pass
+
+    def notify(self, thing, **extra_kwargs):
+        # now you do the thing you want to do, with thing containing the variable in question
+        pass
+
+thing = ThingIAmMessingWith(initial='whatever')
+to_do = ThingIWantToDoOnChange()
+thing.register(to_do)
+
+-------------------------------------------------------------------------------
+PYGAME
+Display Text to Screen
+---
+pygame.font.init() # you have to call this at the start,
+                   # if you want to use this module.
+myfont = pygame.font.SysFont('Comic Sans MS', 30)
+
+textsurface = myfont.render('Some Text', False, (0, 0, 0))
+
+screen.blit(textsurface,(0,0))
+
+---
+Load Images in Pygame
+---
+background = "C:\\python26\\stuff\\bg.jpg"
+background_surface = pygame.image.load(background)
+
+-------------------------------------------------------------------------------
