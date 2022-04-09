@@ -2,15 +2,19 @@ from Entities.Stamina import Stamina
 
 
 class Unit:
-    def __init__(self):
+    def __init__(self, new_name: str = None):
+        self.name = new_name
         self.stamina = Stamina()
-        self.player_position = None, None
+        self.position = None, None
 
     class OutOfStamina(Exception):
         pass
 
+    def set_name(self, new_name: str = None):
+        self.name = new_name
+
     def set_position(self, position: tuple):
-        self.player_position = position
+        self.position = position
 
     def move(self, stamina_cost: int = 1):
         if self.stamina.current_stamina == 0:

@@ -6,17 +6,14 @@ BOARD_DEFAULT: int = 10
 
 
 class Board:
-    def __init__(self, width: int = BOARD_DEFAULT, height: int = BOARD_DEFAULT):
-        if not BOARD_MINIMUM < width <= BOARD_MAXIMUM or not BOARD_MINIMUM < height <= BOARD_MAXIMUM:
+    def __init__(self, new_width: int = BOARD_DEFAULT, new_height: int = BOARD_DEFAULT):
+        if not BOARD_MINIMUM < new_width <= BOARD_MAXIMUM or not BOARD_MINIMUM < new_height <= BOARD_MAXIMUM:
             raise self.InvalidBoardSize
-        self.width = width
-        self.height = height
-        self.player_list = []
-        self.enemy_list = []
-        self.active_player: Unit() = None
-        self.active_enemy: Unit() = None
-        self.active_player_index: int = 0
-        # self.enemy_unit = None
+        self.width = new_width
+        self.height = new_height
+
+        self.team_dict: Team() = {}
+        self.active_team: str = None
 
     class InvalidBoardSize(Exception):
         pass
@@ -24,67 +21,147 @@ class Board:
     class PositionOutOfBounds(Exception):
         pass
 
-    class InvalidPlayerMovement(Exception):
-        pass
-
-    class ActivePlayerIndexOutOfBounds(Exception):
+    class InvalidUnitMovement(Exception):
         pass
 
     class PositionAlreadyOccupied(Exception):
         pass
 
+    class TeamNameAlreadyTaken(Exception):
+        pass
+
+    class TeamDoesNotExist(Exception):
+        pass
+
+    class TeamInactive(Exception):
+        pass
+
+    # Teams
+    def create_team(self, team_name: str):
+        if self.does_team_exist(team_name):
+            raise self.TeamNameAlreadyTaken
+        else:
+            self.team_dict[team_name] = Team()
+
+        if self.active_team is None:
+            self.active_team = team_name
+
+    def does_team_exist(self, team_name: str):
+        if team_name in self.team_dict:
+            return True
+        return False
+
+    def get_active_team(self) -> str:
+        return self.active_team
+
+    def set_active_team(self, team_name: str):
+        if self.does_team_exist(team_name):
+            self.active_team = team_name
+        else:
+            raise self.TeamDoesNotExist
+
+    # Positions
     def get_position(self, position: tuple) -> tuple:
         if not (0 <= position[0] < self.width and 0 <= position[1] < self.height):
             raise self.PositionOutOfBounds
         return position
 
-    def spawn_unit(self, unit_type: str, position: tuple = (0, 0)):
-        new_unit = Unit()
-        if not self.is_position_occupied(position):
-            self.set_player_position(position, new_unit)
-        if unit_type == "player":
-            self.player_list.append(new_unit)
-        else:
-            self.enemy_list.append(new_unit)
-
-    def set_player_position(self, position: tuple, player: Unit = None):
+    def set_unit_position(self, unit: Unit, position: tuple):
         if not (0 <= position[0] < self.width and 0 <= position[1] < self.height):
             raise self.PositionOutOfBounds
         if self.is_position_occupied(position):
             raise self.PositionAlreadyOccupied
-        if player is None:
-            self.active_player.set_position(position)
-        else:
-            player.set_position(position)
+        unit.set_position(position)
 
-    def get_player_position(self) -> tuple:
-        return self.active_player.player_position
-
-    def move_player_unit(self, position: tuple, stamina_cost: int = 1):
+    def move_unit(self, unit: Unit, position: tuple, stamina_cost: int = 1):
         x = position[0]
         y = position[1]
-        if abs((x + y) - (self.active_player.player_position[0] + self.active_player.player_position[1])) != 1 \
-                or self.active_player.player_position[0] + self.active_player.player_position[1] == x + y:
-            raise self.InvalidPlayerMovement
-        self.set_player_position(position)
-        self.active_player.move(stamina_cost)
-
-    def pass_turn(self):
-        self.active_player_index += 1
-        if self.active_player_index >= len(self.player_list):
-            self.active_player_index = 0
-        self.set_active_player(self.active_player_index)
-        self.active_player.start_turn()
-
-    def set_active_player(self, active_index):
-        if active_index >= len(self.player_list):
-            raise self.ActivePlayerIndexOutOfBounds
-        self.active_player = self.player_list[active_index]
+        if abs((x + y) - (unit.position[0] + unit.position[1])) != 1 \
+                or unit.position[0] + unit.position[1] == x + y:
+            raise self.InvalidUnitMovement
+        self.set_unit_position(unit, position)
+        unit.move(stamina_cost)
 
     def is_position_occupied(self, position: tuple) -> bool:
         x = position[0]
         y = position[1]
-        for player in self.player_list:
-            if x == player.player_position[0] and y == player.player_position[1]:
-                return True
+        for team in self.team_dict:
+            for unit in self.team_dict[team].unit_list:
+                if x == unit.position[0] and y == unit.position[1]:
+                    return True
         return False
+
+    def validate_spawn_position(self, position: tuple, unit: str = "player") -> tuple:
+        if self.is_position_occupied(position):
+            if unit == "player":
+                for j in range(self.height):
+                    for i in range(self.width):
+                        if not self.is_position_occupied((i, j)):
+                            return i, j
+                raise self.PositionAlreadyOccupied
+            else:
+                for j in range(self.height-1, 0, -1):
+                    for i in range(self.width-1, 0, -1):
+                        if not self.is_position_occupied((i, j)):
+                            return i, j
+                raise self.PositionAlreadyOccupied
+        else:
+            return position
+
+
+class Team:
+    def __init__(self):
+        self.unit_list = []
+        self.active_team: bool = False
+        self.active_unit_index: int = -1
+
+    class ActiveUnitIndexOutOfBounds(Exception):
+        pass
+
+    class CannotPassUnitTurn(Exception):
+        pass
+
+    class UnitListEmpty(Exception):
+        pass
+
+    class NamedUnitDoesNotExist(Exception):
+        pass
+
+    # Team Functions
+    def set_active_unit_index(self, active_index):
+        if active_index >= len(self.unit_list) or active_index < 0:
+            raise self.ActiveUnitIndexOutOfBounds
+        self.active_unit_index = active_index
+
+    def spawn_unit(self, unit_name: str = None):
+        new_unit = Unit(unit_name)
+        self.unit_list.append(new_unit)
+        if self.active_unit_index is -1:
+            self.active_unit_index = 0
+
+    def pass_unit_turn(self):
+        if len(self.unit_list) > 0:
+            if self.active_unit_index < len(self.unit_list)-1:
+                self.set_active_unit_index(self.active_unit_index+1)
+            elif self.active_unit_index == len(self.unit_list)-1:
+                self.set_active_unit_index(0)
+            else:
+                raise self.CannotPassUnitTurn
+            unit = self.get_active_unit()
+            unit.start_turn()
+        else:
+            raise self.UnitListEmpty
+
+        self.unit_list[self.active_unit_index].start_turn()
+
+    def get_active_unit(self) -> Unit:
+        if len(self.unit_list) > 0:
+            return self.unit_list[self.active_unit_index]
+        else:
+            raise self.UnitListEmpty
+
+    def get_unit(self, name: str) -> Unit:
+        for unit in self.unit_list:
+            if unit.name is name:
+                return unit
+        raise self.NamedUnitDoesNotExist

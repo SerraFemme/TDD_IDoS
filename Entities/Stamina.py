@@ -5,6 +5,7 @@ LARGEST_MAXIMUM: int = 2 * DEFAULT_MAXIMUM
 
 class Stamina:
     def __init__(self, default_max: int = DEFAULT_MAXIMUM):
+        # default_max is used for resetting max stamina
         self.default_max: int = default_max
         self.max_stamina: int = default_max
         self.current_stamina: int = self.max_stamina
@@ -21,7 +22,7 @@ class Stamina:
     class StaminaMaxRecedesOne(Exception):
         pass
 
-    class StaminaMaxExceedsTwenty(Exception):
+    class StaminaMaxExceedsHardCap(Exception):
         pass
 
     def expend(self, amount: int):
@@ -43,7 +44,7 @@ class Stamina:
         if new_max < SMALLEST_MAXIMUM:
             raise self.StaminaMaxRecedesOne
         elif new_max > LARGEST_MAXIMUM:
-            raise self.StaminaMaxExceedsTwenty
+            raise self.StaminaMaxExceedsHardCap
         self.max_stamina = new_max
         if self.current_stamina > self.max_stamina:
             self.current_stamina = self.max_stamina

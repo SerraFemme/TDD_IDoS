@@ -1,39 +1,36 @@
 import unittest
 
 from Entities.Board import Board
+from Entities.Unit import Unit
+
+player_spawn_position: tuple = (0, 0)
+enemy_spawn_position: tuple = None
+
+player_team_name = "Team_Players"
+enemy_team_name = "Team_Enemies"
 
 
 class MyTestCase(unittest.TestCase):
     def setUp(self):
         self.board = Board()
+        self.board.create_team(player_team_name)
+        self.board.create_team(enemy_team_name)
+        self.enemy_spawn_position = self.board.width-1, self.board.height-1
 
-    def create_new_player(self, position: tuple = (0, 0)):
-        self.board.spawn_unit("player", position)
-        self.board.set_active_player(self.board.active_player_index)
-
-    def assert_position_exceptions(self, function):
-        self.create_new_player()
-        self.assertRaises(self.board.PositionOutOfBounds, function, (-1, -1))
-        self.assertRaises(self.board.PositionOutOfBounds, function, (-1, self.board.height/2))
-        self.assertRaises(self.board.PositionOutOfBounds, function, (self.board.width/2, -1))
-        self.assertRaises(self.board.PositionOutOfBounds, function, (self.board.width, self.board.height))
-        self.assertRaises(self.board.PositionOutOfBounds, function, (self.board.width, self.board.height/2))
-        self.assertRaises(self.board.PositionOutOfBounds, function, (self.board.width/2, self.board.height))
-
-    def is_player_in_different_position(self, start_position: tuple):
-        if start_position[0] == self.board.active_player.player_position[0] and \
-                start_position[1] == self.board.active_player.player_position[1]:
+    # Utility Functions
+    def is_unit_in_different_position(self, unit: Unit, start_position: tuple):
+        if start_position[0] == unit.position[0] and start_position[1] == unit.position[1]:
             return False
         else:
             return True
 
-    def how_much_did_player_stamina_change(self, starting_stamina: int) -> int:
-        return starting_stamina - self.board.active_player.stamina.current_stamina
+    def how_much_did_unit_stamina_change(self, unit: Unit, starting_stamina: int) -> int:
+        return starting_stamina - unit.stamina.current_stamina
 
     def take_player_turn(self):
         pass
 
-    # TESTS
+    # Board Tests
     def test_new_board(self):
         self.assertTrue(self.board.width)
         self.assertTrue(self.board.height)
@@ -50,131 +47,199 @@ class MyTestCase(unittest.TestCase):
     def test_board_has_positions(self):
         self.assertTrue(self.board.get_position((0, 0)))
 
-    def test_when_position_is_out_of_bounds_throws_PositionOutOfBounds(self):
-        self.assert_position_exceptions(self.board.get_position)
+    def test_board_getting_invalid_position_throws_PositionOutOfBounds(self):
+        self.assertRaises(self.board.PositionOutOfBounds,
+                          self.board.get_position, (-1, -1))
+        self.assertRaises(self.board.PositionOutOfBounds,
+                          self.board.get_position, (-1, self.board.height/2))
+        self.assertRaises(self.board.PositionOutOfBounds,
+                          self.board.get_position, (self.board.width/2, -1))
+        self.assertRaises(self.board.PositionOutOfBounds,
+                          self.board.get_position, (self.board.width, self.board.height))
+        self.assertRaises(self.board.PositionOutOfBounds,
+                          self.board.get_position, (self.board.width, self.board.height/2))
+        self.assertRaises(self.board.PositionOutOfBounds,
+                          self.board.get_position, (self.board.width/2, self.board.height))
 
-    def test_PositionOutOfBounds_set(self):
-        self.assert_position_exceptions(self.board.set_player_position)
+    def test_board_setting_invalid_unit_position_throws_PositionOutOfBounds(self):
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        test_unit = player_team.get_active_unit()
 
-    def test_player_unit_can_be_spawned(self):
-        self.assertFalse(self.board.active_player)
-        self.board.spawn_unit("player")
-        self.assertTrue(len(self.board.player_list) == 1)
+        self.assertRaises(self.board.PositionOutOfBounds, self.board.set_unit_position,
+                          test_unit, (-1, -1))
+        self.assertNotEqual(test_unit.position[0], -1)
+        self.assertNotEqual(test_unit.position[1], -1)
+        self.assertRaises(self.board.PositionOutOfBounds, self.board.set_unit_position,
+                          test_unit, (-1, self.board.height/2))
+        self.assertRaises(self.board.PositionOutOfBounds, self.board.set_unit_position,
+                          test_unit, (self.board.width/2, -1))
+        self.assertRaises(self.board.PositionOutOfBounds, self.board.set_unit_position,
+                          test_unit, (self.board.width, self.board.height))
+        self.assertRaises(self.board.PositionOutOfBounds, self.board.set_unit_position,
+                          test_unit, (self.board.width, self.board.height/2))
+        self.assertRaises(self.board.PositionOutOfBounds, self.board.set_unit_position,
+                          test_unit, (self.board.width/2, self.board.height))
 
-    def test_player_unit_position_is_set_when_spawned(self):
-        self.create_new_player()
-        self.assertIsNotNone(self.board.active_player.player_position[0])
-        self.assertIsNotNone(self.board.active_player.player_position[1])
+    # Team Tests
+    def test_creating_a_team_with_the_same_name_as_an_existing_one_throws_TeamNameAlreadyTaken(self):
+        self.assertRaises(self.board.TeamNameAlreadyTaken, self.board.create_team, player_team_name)
 
-    def test_player_unit_can_set_position(self):
-        self.create_new_player()
-        self.board.set_player_position((2, 2))
-        self.assertEqual(self.board.get_player_position(), (2, 2))
+    def test_team_empty_unit_list_throws_UnitListEmpty(self):
+        for team in self.board.team_dict:
+            self.assertRaises(self.board.team_dict[team].UnitListEmpty, self.board.team_dict[team].get_active_unit)
 
-    def test_when_player_position_is_set_out_of_bounds_throws_PositionOutOfBounds(self):
-        self.create_new_player()
-        self.assertRaises(self.board.PositionOutOfBounds, self.board.set_player_position, (-1, -1))
-        self.assertNotEqual(self.board.active_player.player_position[0], -1)
-        self.assertNotEqual(self.board.active_player.player_position[1], -1)
+    # Game Unit Tests
+    def test_unit_can_be_spawned(self):
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        self.assertIsNotNone(player_team.get_active_unit())
+
+        enemy_team = self.board.team_dict[enemy_team_name]
+        enemy_team.spawn_unit()
+        self.assertIsNotNone(enemy_team.get_active_unit())
+
+    def test_unit_can_set_position(self):
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_unit = player_team.get_active_unit()
+        self.board.set_unit_position(player_unit, (2, 2))
+        self.assertEqual(player_unit.position, (2, 2))
+
+        enemy_team = self.board.team_dict[enemy_team_name]
+        enemy_team.spawn_unit()
+        enemy_unit = enemy_team.get_active_unit()
+        self.board.set_unit_position(enemy_unit, (5, 5))
+        self.assertEqual(enemy_unit.position, (5, 5))
 
     def test_player_unit_moves_onto_adjacent_square(self):
-        self.create_new_player()
-        start_position = self.board.active_player.player_position
-        test_position = self.board.active_player.player_position[0] + 1, self.board.active_player.player_position[1]
-        self.board.move_player_unit(test_position)
-        self.assertTrue(self.is_player_in_different_position(start_position))
-        self.create_new_player()
-        start_position = self.board.active_player.player_position
-        test_position = self.board.active_player.player_position[0], self.board.active_player.player_position[1] + 1
-        self.board.move_player_unit(test_position)
-        self.assertTrue(self.is_player_in_different_position(start_position))
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_unit = player_team.get_active_unit()
+        self.board.set_unit_position(player_unit, player_spawn_position)
+        test_positions = [(player_unit.position[0]+1, player_unit.position[1]),
+                          (player_unit.position[0]+1, player_unit.position[1]+1)]
+        for i in range(len(test_positions)):
+            start_position = player_unit.position
+            self.board.move_unit(player_unit, test_positions[i])
+            self.assertTrue(self.is_unit_in_different_position(player_unit, start_position))
 
     def test_player_moving_out_of_bounds_throws_PositionOutOfBounds(self):
-        self.create_new_player()
-        test_position = self.board.active_player.player_position[0] - 1, self.board.active_player.player_position[1]
-        self.assertRaises(self.board.PositionOutOfBounds, self.board.move_player_unit, test_position)
-        test_position = self.board.active_player.player_position[0], self.board.active_player.player_position[1] - 1
-        self.assertRaises(self.board.PositionOutOfBounds, self.board.move_player_unit, test_position)
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_unit = player_team.get_active_unit()
+        self.board.set_unit_position(player_unit, player_spawn_position)
+
+        test_position = player_unit.position[0] - 1, player_unit.position[1]
+        self.assertRaises(self.board.PositionOutOfBounds, self.board.move_unit, player_unit, test_position)
+        test_position = player_unit.position[0], player_unit.position[1] - 1
+        self.assertRaises(self.board.PositionOutOfBounds, self.board.move_unit, player_unit, test_position)
 
     def test_player_loses_stamina_when_moving(self):
-        self.create_new_player()
-        starting_stamina = self.board.active_player.stamina.current_stamina
-        test_position = self.board.active_player.player_position[0] + 1, self.board.active_player.player_position[1]
-        self.board.move_player_unit(test_position)
-        self.assertTrue(self.how_much_did_player_stamina_change(starting_stamina))
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_unit = player_team.get_active_unit()
+        self.board.set_unit_position(player_unit, player_spawn_position)
+
+        starting_stamina = player_unit.stamina.current_stamina
+        test_position = player_unit.position[0] + 1, player_unit.position[1]
+        self.board.move_unit(player_unit, test_position)
+        self.assertTrue(self.how_much_did_unit_stamina_change(player_unit, starting_stamina))
 
     def test_player_unit_moving_onto_its_own_tile_throws_InvalidPlayerMovement(self):
-        self.create_new_player()
-        self.assertRaises(self.board.InvalidPlayerMovement, self.board.move_player_unit, (0, 0))
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_unit = player_team.get_active_unit()
+        self.board.set_unit_position(player_unit, player_spawn_position)
+        self.assertRaises(self.board.InvalidUnitMovement, self.board.move_unit, player_unit, player_spawn_position)
 
     def test_player_unit_moving_onto_non_adjacent_tile_throws_InvalidPlayerMovement(self):
-        self.create_new_player()
-        self.assertRaises(self.board.InvalidPlayerMovement, self.board.move_player_unit, (2, 2))
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_unit = player_team.get_active_unit()
+        self.board.set_unit_position(player_unit, player_spawn_position)
+        self.assertRaises(self.board.InvalidUnitMovement, self.board.move_unit, player_unit, (2, 2))
 
     def test_player_loses_more_than_one_stamina_when_moving_onto_difficult_terrain(self):
-        self.create_new_player()
-        self.board.set_active_player(self.board.active_player_index)
-        starting_stamina = self.board.active_player.stamina.current_stamina
-        self.board.move_player_unit((self.board.active_player.player_position[0] + 1,
-                                    self.board.active_player.player_position[1]), 2)
-        self.assertEqual(self.how_much_did_player_stamina_change(starting_stamina), 2)
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_unit = player_team.get_active_unit()
+        self.board.set_unit_position(player_unit, player_spawn_position)
+
+        starting_stamina = player_unit.stamina.current_stamina
+        test_position = (player_unit.position[0] + 1, player_unit.position[1])
+        self.board.move_unit(player_unit, test_position, 2)
+        self.assertEqual(self.how_much_did_unit_stamina_change(player_unit, starting_stamina), 2)
 
     def test_second_player_can_be_spawned(self):
-        self.create_new_player()
-        self.assertIsNotNone(self.board.player_list[0])
-        self.create_new_player()
-        self.assertIsNotNone(self.board.player_list[1])
-
-    def test_active_player_can_be_set(self):
-        self.assertIsNone(self.board.active_player)
-        self.create_new_player()
-        self.board.set_active_player(0)
-        self.assertEqual(self.board.active_player, self.board.player_list[0])
-        self.create_new_player()
-        self.board.set_active_player(1)
-        self.assertEqual(self.board.active_player, self.board.player_list[1])
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit("One")
+        player_team.spawn_unit("Two")
+        self.assertEqual(len(player_team.unit_list), 2)
 
     def test_when_active_player_index_equals_or_exceeds_player_list_length_throws_ActivePlayerIndexOutOfBounds(self):
-        self.create_new_player()
-        self.assertRaises(self.board.ActivePlayerIndexOutOfBounds, self.board.set_active_player, 1)
+        player_team = self.board.team_dict[player_team_name]
+        self.assertRaises(player_team.ActiveUnitIndexOutOfBounds, player_team.set_active_unit_index, 1)
 
     def test_active_player_can_pass_turn_to_next_player(self):
-        self.create_new_player()
-        self.create_new_player()
-        current_player = self.board.active_player
-        self.board.pass_turn()
-        self.assertNotEqual(current_player, self.board.active_player)
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_team.spawn_unit()
+        starting_index = player_team.active_unit_index
+        player_team.pass_unit_turn()
+        self.assertNotEqual(starting_index, player_team.active_unit_index)
 
     def test_a_position_is_occupied_when_a_unit_is_on_it(self):
-        self.create_new_player()
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit()
+        player_unit = player_team.get_active_unit()
+        self.board.set_unit_position(player_unit, player_spawn_position)
         self.assertTrue(self.board.is_position_occupied((0, 0)))
 
-    def test_when_spawning_a_second_player_spawns_them_onto_an_unoccupied_position(self):
-        self.create_new_player()
-        self.assertTrue(self.board.is_position_occupied(self.board.active_player.player_position))
-        self.create_new_player()
-        self.assertTrue(self.board.is_position_occupied(self.board.active_player.player_position))
-
-    def test_when_spawning_a_player_on_a_position_out_of_bounds_throws_PositionOutOfBounds(self):
-        self.assertRaises(self.board.PositionOutOfBounds, self.board.spawn_unit, "player", (-1, -1))
-
     def test_when_a_player_sets_position_to_an_occupied_position_throws_PositionAlreadyOccupied(self):
-        self.create_new_player()
-        test_position = self.board.active_player.player_position
-        self.create_new_player()
-        self.assertRaises(self.board.PositionAlreadyOccupied, self.board.set_player_position, test_position)
+        player_team = self.board.team_dict[player_team_name]
+        player_team.spawn_unit("One")
+        player_team.spawn_unit("Two")
+
+        self.board.set_unit_position(player_team.get_unit("One"), player_spawn_position)
+        self.assertRaises(self.board.PositionAlreadyOccupied, self.board.set_unit_position,
+                          player_team.get_unit("Two"), player_spawn_position)
 
     def test_all_players_can_take_a_turn(self):
+        player_team = self.board.team_dict[player_team_name]
         for i in range(4):
-            self.create_new_player()
-        for i in range(4):
-            self.assertEqual(i, self.board.active_player_index)
-            self.board.pass_turn()
-        self.assertEqual(0, self.board.active_player_index)
+            player_team.spawn_unit()
 
-    def test_enemy_unit_can_be_spawned(self):
-        self.board.spawn_unit("enemy")
-        self.assertTrue(len(self.board.enemy_list) == 1)
+        for i in range(4):
+            self.assertEqual(i, player_team.active_unit_index)
+            player_team.pass_unit_turn()
+
+    def test_board_can_set_active_team(self):
+        self.board.set_active_team(enemy_team_name)
+        self.assertEqual(self.board.get_active_team(), enemy_team_name)
+        self.board.set_active_team(player_team_name)
+        self.assertEqual(self.board.get_active_team(), player_team_name)
+
+    def test_setting_a_nonexistent_team_active_throwsTeamDoesNotExist(self):
+        self.assertRaises(self.board.TeamDoesNotExist, self.board.set_active_team, "Test")
+
+    def test_player_team_passes_to_enemy_team_when_all_players_have_taken_their_turn(self):
+        player_team = self.board.team_dict[player_team_name]
+        enemy_team = self.board.team_dict[enemy_team_name]
+        for i in range(4):
+            player_team.spawn_unit()
+        self.assertEqual(self.board.get_active_team(), player_team_name)
+        self.assertNotEqual(self.board.get_active_team(), enemy_team_name)
+
+        player_team.pass_unit_turn()
+        self.assertEqual(self.board.get_active_team(), player_team_name)
+        player_team.pass_unit_turn()
+        self.assertEqual(self.board.get_active_team(), player_team_name)
+        player_team.pass_unit_turn()
+        self.assertEqual(self.board.get_active_team(), player_team_name)
+        player_team.pass_unit_turn()
+        self.assertNotEqual(self.board.get_active_team(), player_team_name)  # SJB Here
+        self.assertEqual(self.board.get_active_team(), enemy_team_name)
 
 
 if __name__ == '__main__':

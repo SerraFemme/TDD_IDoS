@@ -7,9 +7,15 @@ class MyTestCase(unittest.TestCase):
     def setUp(self):
         self.unit = Unit()
 
-    # Test
+    # Utility
     def unitIsMaxStamina(self) -> bool:
         return self.unit.stamina.max_stamina == self.unit.stamina.current_stamina
+
+    # Tests
+    def test_unit_can_set_new_name(self):
+        name = "String"
+        self.unit.set_name(name)
+        self.assertIsNotNone(self.unit.name)
 
     def test_unit_knows_current_stamina(self):
         self.assertTrue(self.unit.stamina.current_stamina)

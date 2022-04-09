@@ -60,7 +60,7 @@ class StaminaTest(unittest.TestCase):
         self.assertRaises(self.stamina.StaminaMaxRecedesOne, self.stamina.set_max, 0)
 
     def test_when_stamina_max_is_set_above_twenty_throws_StaminaMaxExceedsTwenty(self):
-        self.assertRaises(self.stamina.StaminaMaxExceedsTwenty, self.stamina.set_max, 21)
+        self.assertRaises(self.stamina.StaminaMaxExceedsHardCap, self.stamina.set_max, 21)
 
     def test_when_stamina_max_is_set_below_current_value_set_current_value_to_max(self):
         self.stamina.set_max(5)
